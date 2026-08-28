@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Stockly</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("stockly_theme")||"light");}catch(e){document.documentElement.setAttribute("data-theme","light");}</script>
+  <link rel="stylesheet" href="styles.css?v=20260830b" />
+</head>
+<body class="app-body" data-app hidden>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- ===== Barra superior ===== -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M3 7l9-4 9 4-9 4-9-4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M3 12l9 4 9-4M3 17l9 4 9-4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+      <span>Stockly</span>
+    </div>
+
+    <nav class="topnav" aria-label="Secciones">
+      <button class="topnav-link is-active" data-nav="panel" type="button">Panel</button>
+      <button class="topnav-link" data-nav="activos" type="button">Activos</button>
+      <button class="topnav-link" data-nav="empleados" type="button">Empleados</button>
+      <button class="topnav-link" data-nav="ajustes" type="button">Ajustes</button>
+    </nav>
+
+    <div class="topbar-right">
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Cambiar tema claro u oscuro">
+        <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span class="icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+        <span class="t-light">Modo oscuro</span><span class="t-dark">Modo claro</span>
+      </button>
+      <a class="btn btn-ghost btn-sm" id="export-btn" href="api/export/csv">Exportar CSV</a>
+      <div class="usermenu">
+        <button class="usermenu-btn" id="usermenu-btn" type="button" aria-haspopup="true" aria-expanded="false">
+          <span class="avatar" id="user-avatar">A</span>
+          <span id="user-name">Admin</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="usermenu-pop" id="usermenu-pop" hidden>
+          <button type="button" data-nav="ajustes" data-focus="pass">Cambiar contraseña</button>
+          <button type="button" id="logout-btn">Cerrar sesión</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="app-main">
+
+    <!-- ================= PANEL ================= -->
+    <section class="view is-active" data-view="panel">
+      <div class="view-head">
+        <h1>Panel de inventario</h1>
+        <p class="muted" id="panel-sub">Resumen general de los activos de la empresa.</p>
+      </div>
+
+      <div class="stat-grid" id="stat-grid"><!-- tarjetas por JS --></div>
+
+      <div class="panel-cols">
+        <div class="card">
+          <div class="card-head">
+            <h2>Alertas</h2>
+            <span class="muted" id="alert-count"></span>
+          </div>
+          <ul class="alert-list" id="alert-list"><!-- por JS --></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Reparto por tipo</h2></div>
+          <ul class="bar-list" id="type-breakdown"><!-- por JS --></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ACTIVOS ================= -->
+    <section class="view" data-view="activos">
+      <div class="view-head">
+        <h1>Activos</h1>
+        <button class="btn btn-primary" id="new-asset-btn" type="button">+ Nuevo activo</button>
+      </div>
+
+      <div class="toolbar">
+        <input type="search" id="asset-search" class="search" placeholder="Buscar por marca, modelo, serie, código o notas…" />
+        <select id="filter-type" class="select"><option value="">Todos los tipos</option></select>
+        <select id="filter-state" class="select"><option value="">Todos los estados</option></select>
+        <select id="filter-emp" class="select"><option value="">Cualquier asignación</option></select>
+        <button class="btn btn-ghost btn-sm" id="clear-filters" type="button">Limpiar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="asset-table">
+          <thead>
+            <tr>
+              <th>Código</th><th>Tipo</th><th>Marca / Modelo</th><th>Nº de serie</th>
+              <th>Estado</th><th>Asignado a</th><th>Compra</th>
+            </tr>
+          </thead>
+          <tbody id="asset-tbody"></tbody>
+        </table>
+        <p class="empty-row" id="asset-empty" hidden>No hay activos que coincidan con el filtro.</p>
+      </div>
+      <p class="muted small" id="asset-total"></p>
+    </section>
+
+    <!-- ================= EMPLEADOS ================= -->
+    <section class="view" data-view="empleados">
+      <div class="view-head">
+        <h1>Empleados</h1>
+        <button class="btn btn-primary" id="new-emp-btn" type="button">+ Nuevo empleado</button>
+      </div>
+
+      <div class="toolbar">
+        <input type="search" id="emp-search" class="search" placeholder="Buscar por nombre, área o correo…" />
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="emp-table">
+          <thead>
+            <tr><th>Nombre</th><th>Área / Departamento</th><th>Correo</th><th>Activos asignados</th></tr>
+          </thead>
+          <tbody id="emp-tbody"></tbody>
+        </table>
+        <p class="empty-row" id="emp-empty" hidden>Aún no hay empleados. Crea el primero para poder asignar activos.</p>
+      </div>
+    </section>
+
+    <!-- ================= AJUSTES ================= -->
+    <section class="view" data-view="ajustes">
+      <div class="view-head"><h1>Ajustes</h1></div>
+
+      <div class="card">
+        <div class="card-head"><h2>Alertas de inventario</h2></div>
+        <p class="muted">Marcar un activo <strong>disponible</strong> como “lleva mucho tiempo sin asignar” cuando pasen estos días desde su último movimiento.</p>
+        <form id="settings-form" class="inline-form">
+          <label for="stale-days">Días sin movimiento</label>
+          <input type="number" id="stale-days" min="1" max="365" step="1" class="input-sm" />
+          <button class="btn btn-primary btn-sm" type="submit">Guardar</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Cambiar contraseña</h2></div>
+        <form id="password-form" class="stack-form">
+          <label for="pw-current">Contraseña actual</label>
+          <input type="password" id="pw-current" autocomplete="current-password" />
+          <label for="pw-next">Contraseña nueva (mín. 8 caracteres)</label>
+          <input type="password" id="pw-next" autocomplete="new-password" />
+          <button class="btn btn-primary btn-sm" type="submit">Actualizar contraseña</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Administradores</h2>
+          <button class="btn btn-ghost btn-sm" id="new-admin-btn" type="button">+ Añadir</button>
+        </div>
+        <p class="muted">Personas que pueden entrar a gestionar el inventario. No hay roles: todas tienen el mismo acceso.</p>
+        <ul class="admin-list" id="admin-list"></ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== Panel lateral de detalle ===== -->
+  <aside class="drawer" id="drawer" hidden aria-labelledby="drawer-title">
+    <div class="drawer-head">
+      <h2 id="drawer-title">Detalle</h2>
+      <button class="icon-btn" id="drawer-close" type="button" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <!-- ===== Modal genérico ===== -->
+  <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modal-title">Título</h2>
+        <button class="icon-btn" id="modal-close" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <form id="modal-form">
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" id="modal-cancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="modal-save">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Avisos (toast) ===== -->
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+
+  <script defer src="app.js?v=20260830b"></script>
+</body>
+</html>

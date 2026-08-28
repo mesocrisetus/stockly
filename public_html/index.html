@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Stockly · Acceso</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("stockly_theme")||"light");}catch(e){document.documentElement.setAttribute("data-theme","light");}</script>
+  <link rel="stylesheet" href="styles.css?v=20260830b" />
+</head>
+<body class="login-body">
+  <button type="button" class="theme-toggle floating" id="theme-toggle" aria-label="Cambiar tema claro u oscuro">
+    <span class="icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+    <span class="icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+    <span class="t-light">Modo oscuro</span><span class="t-dark">Modo claro</span>
+  </button>
+  <main class="login-wrap">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="login-brand">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 7l9-4 9 4-9 4-9-4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M3 12l9 4 9-4M3 17l9 4 9-4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        </svg>
+        <span>Stockly</span>
+      </div>
+      <h1 id="login-title">Acceso de administrador</h1>
+      <p class="login-sub">Gestión interna de equipos y asignaciones.</p>
+
+      <form id="login-form" novalidate>
+        <label for="username">Usuario</label>
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus />
+
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+
+        <button type="submit" class="btn btn-primary btn-block" id="login-btn">Entrar</button>
+        <p class="form-notice" id="login-error" role="alert" hidden></p>
+      </form>
+    </section>
+    <p class="login-foot">Uso interno · IT / RRHH</p>
+  </main>
+
+  <script defer src="app.js?v=20260830b"></script>
+</body>
+</html>

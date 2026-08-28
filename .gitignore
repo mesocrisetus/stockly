@@ -1,0 +1,24 @@
+# --- Datos en tiempo de ejecución (NUNCA subir) -----------------------------
+# La base de datos, las cuentas y la contraseña inicial se crean solas al
+# arrancar. No deben viajar en el repositorio.
+/data_store/*
+!/data_store/.gitkeep
+
+# --- PHP portátil de pruebas (Windows) -------------------------------------
+# ~87 MB de binario. Se descarga con tools/descargar-php.ps1
+/tools/php/
+
+# --- Basura varia --------------------------------------------------------
+*.log
+*.tmp
+*.bak
+*.lock
+cj*.txt
+nohup.out
+
+# --- Sistema operativo / editores -------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

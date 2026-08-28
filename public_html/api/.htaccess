@@ -1,0 +1,21 @@
+# Solo index.php es accesible. El resto (db.php, _datos/…) queda bloqueado.
+<FilesMatch "\.php$">
+  Require all denied
+</FilesMatch>
+<Files "index.php">
+  Require all granted
+</Files>
+
+# Fallback para Apache antiguo
+<IfModule !mod_authz_core.c>
+  Order deny,allow
+  Deny from all
+  <Files "index.php">
+    Allow from all
+  </Files>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^_datos/ - [F]
+</IfModule>
