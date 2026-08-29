@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
   <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("stockly_theme")||"light");}catch(e){document.documentElement.setAttribute("data-theme","light");}</script>
-  <link rel="stylesheet" href="styles.css?v=20260830b" />
+  <link rel="stylesheet" href="styles.css?v=20261101" />
 </head>
 <body class="app-body" data-app hidden>
   <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -146,6 +146,19 @@
       </div>
 
       <div class="card">
+        <div class="card-head">
+          <h2>Tipos de activo</h2>
+        </div>
+        <p class="muted">Las categorías que aparecen al crear un activo y en los filtros (celular, portátil, switch, router…).</p>
+        <form id="type-form" class="inline-form">
+          <label for="type-new">Nuevo tipo</label>
+          <input type="text" id="type-new" class="input-md" maxlength="40" placeholder="p. ej. Switch" />
+          <button class="btn btn-primary btn-sm" type="submit">Añadir</button>
+        </form>
+        <ul class="admin-list" id="type-list"></ul>
+      </div>
+
+      <div class="card">
         <div class="card-head"><h2>Cambiar contraseña</h2></div>
         <form id="password-form" class="stack-form">
           <label for="pw-current">Contraseña actual</label>
@@ -198,6 +211,6 @@
   <!-- ===== Avisos (toast) ===== -->
   <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
 
-  <script defer src="app.js?v=20260830b"></script>
+  <script defer src="app.js?v=20261101"></script>
 </body>
 </html>

@@ -45,6 +45,7 @@ def main():
 
     files = []  # (arcname, abspath, is_text_lf, executable)
     files.append(("autoinstall.sh", os.path.join(ROOT, "packaging", "autoinstall.sh"), True, True))
+    files.append(("actualizar.sh", os.path.join(ROOT, "packaging", "actualizar.sh"), True, True))
     files.append(("desinstalar.sh", os.path.join(ROOT, "packaging", "desinstalar.sh"), True, True))
     files.append(("LEEME.txt", os.path.join(ROOT, "packaging", "LEEME.txt"), True, False))
     files.append(("DESPLIEGUE-UBUNTU.md", os.path.join(ROOT, "DESPLIEGUE-UBUNTU.md"), True, False))

@@ -35,7 +35,7 @@ contraseña*) y luego borra ese fichero `.txt`.
 | **Panel** | Resumen: totales, avisos (activos en reparación o parados mucho tiempo), reparto por tipo. |
 | **Activos** | Lista completa con buscador y filtros por tipo, estado y persona. Botón *Nuevo activo*. Clic en una fila para ver su ficha. |
 | **Empleados** | Alta de personas (nombre, área, correo). Clic en una fila para ver sus activos y su historial. |
-| **Ajustes** | Días para el aviso de "sin asignar", cambio de contraseña y alta de más administradores. |
+| **Ajustes** | Días para el aviso de "sin asignar", **tipos de activo** (añadir/renombrar/eliminar categorías como switch, router…), cambio de contraseña y alta de más administradores. |
 | **Exportar CSV** | Descarga todo el inventario para abrirlo en Excel. |
 | **Modo claro / oscuro** | Botón en la barra superior. Arranca en **claro** (aspecto empresarial) y recuerda tu elección en ese navegador. |
 

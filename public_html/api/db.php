@@ -36,6 +36,7 @@ function db_default(): array
         'employees'   => [],
         'assets'      => [],
         'assignments' => [],
+        'types'       => [],   // tipos de activo personalizados; vacío = usar los de fábrica
         'settings'    => ['stale_days' => 30],
         'seq'         => ['asset' => 0, 'employee' => 0, 'assignment' => 0, 'user' => 0],
     ];

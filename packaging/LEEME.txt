@@ -43,8 +43,11 @@ Necesitas:  un servidor con Ubuntu 22.04 o 24.04 y acceso a internet
   - Abre el puerto web en el cortafuegos si está activo.
 
   Instalar en otra carpeta:   sudo ./autoinstall.sh /opt/stockly
-  Actualizar (sin perder datos): vuelve a ejecutar  sudo ./autoinstall.sh
-  Desinstalar:                  sudo ./desinstalar.sh
+  Actualizar la app (sin tocar Apache ni los datos):  sudo ./actualizar.sh
+  Desinstalar:                sudo ./desinstalar.sh
+
+  Añadir categorías de activo (switch, router, cámara…): dentro de la app,
+  pestaña Ajustes -> "Tipos de activo". No hay que tocar ningún fichero.
 
 ------------------------------------------------------------------------
   Copia de seguridad

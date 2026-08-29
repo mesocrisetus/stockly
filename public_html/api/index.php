@@ -73,8 +73,43 @@ function clean_str($v, int $max = 500): string
 }
 
 /** Tipos y estados admitidos. */
-const ASSET_TYPES  = ['celular', 'portatil', 'monitor', 'tablet', 'impresora', 'mobiliario', 'perifericos', 'otro'];
 const ASSET_STATES = ['disponible', 'asignado', 'reparacion', 'baja'];
+
+/** Tipos de activo de fábrica. Se usan mientras el usuario no defina los suyos. */
+const DEFAULT_TYPES = [
+    ['id' => 'celular',     'label' => 'Celular'],
+    ['id' => 'portatil',    'label' => 'Portátil'],
+    ['id' => 'monitor',     'label' => 'Monitor'],
+    ['id' => 'tablet',      'label' => 'Tablet'],
+    ['id' => 'impresora',   'label' => 'Impresora'],
+    ['id' => 'mobiliario',  'label' => 'Mobiliario'],
+    ['id' => 'perifericos', 'label' => 'Periféricos'],
+    ['id' => 'otro',        'label' => 'Otro'],
+];
+
+/** Lista de tipos vigente: la del usuario si existe, si no la de fábrica. */
+function types_list(array $data): array
+{
+    $t = $data['types'] ?? [];
+    return $t ? array_values($t) : DEFAULT_TYPES;
+}
+
+/** Solo los identificadores (slugs) de los tipos vigentes. */
+function type_ids(array $data): array
+{
+    return array_map(fn($x) => $x['id'], types_list($data));
+}
+
+/** Convierte un nombre libre en un identificador: "Switch de red" -> "switch-de-red". */
+function type_slug(string $label): string
+{
+    $s = mb_strtolower(trim($label));
+    $s = strtr($s, [
+        'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n',
+    ]);
+    $s = preg_replace('/[^a-z0-9]+/', '-', $s) ?? '';
+    return trim($s, '-');
+}
 
 // ---------------------------------------------------------------------------
 // Enrutado
@@ -138,6 +173,12 @@ function route(string $method, array $seg)
     }
     if ($r === 'settings' && $method === 'POST') {
         return handle_settings();
+    }
+    if ($r === 'types') {
+        if ($method === 'GET')                      return handle_types_list();
+        if ($method === 'POST' && !isset($seg[1]))  return handle_types_create();
+        if ($method === 'PUT'  && isset($seg[1]))   return handle_types_update($seg[1]);
+        if ($method === 'DELETE' && isset($seg[1])) return handle_types_delete($seg[1]);
     }
     if ($r === 'export' && ($seg[1] ?? '') === 'csv' && $method === 'GET') {
         return handle_export_csv();
@@ -294,6 +335,99 @@ function handle_admins_delete(string $id): void
 }
 
 // ===========================================================================
+// Tipos de activo (personalizables desde Ajustes)
+// ===========================================================================
+function handle_types_list(): void
+{
+    require_session();
+    [$data] = db_load();
+    respond(['types' => types_list($data)]);
+}
+
+function handle_types_create(): void
+{
+    require_session();
+    $label = clean_str(body()['label'] ?? '', 40);
+    if (mb_strlen($label) < 2) {
+        fail('El nombre del tipo debe tener al menos 2 caracteres.', 422);
+    }
+    $created = db_transaction(function (array &$data) use ($label) {
+        if (!$data['types']) {
+            $data['types'] = DEFAULT_TYPES;   // materializa los de fábrica antes de añadir
+        }
+        $slug = type_slug($label);
+        if ($slug === '') {
+            fail('Ese nombre no sirve como tipo. Usa letras o números.', 422);
+        }
+        foreach ($data['types'] as $t) {
+            if ($t['id'] === $slug || strcasecmp($t['label'], $label) === 0) {
+                fail('Ya existe un tipo con ese nombre.', 409);
+            }
+        }
+        $row = ['id' => $slug, 'label' => $label];
+        $data['types'][] = $row;
+        return $row;
+    });
+    respond(['ok' => true, 'type' => $created], 201);
+}
+
+function handle_types_update(string $id): void
+{
+    require_session();
+    $label = clean_str(body()['label'] ?? '', 40);
+    if (mb_strlen($label) < 2) {
+        fail('El nombre del tipo debe tener al menos 2 caracteres.', 422);
+    }
+    $updated = db_transaction(function (array &$data) use ($id, $label) {
+        if (!$data['types']) {
+            $data['types'] = DEFAULT_TYPES;
+        }
+        foreach ($data['types'] as $t) {
+            if ($t['id'] !== $id && strcasecmp($t['label'], $label) === 0) {
+                fail('Ya existe un tipo con ese nombre.', 409);
+            }
+        }
+        $found = false;
+        foreach ($data['types'] as &$t) {
+            if ($t['id'] === $id) { $t['label'] = $label; $found = true; break; }
+        }
+        unset($t);
+        if (!$found) {
+            fail('Tipo no encontrado.', 404);
+        }
+        return ['id' => $id, 'label' => $label];
+    });
+    respond(['ok' => true, 'type' => $updated]);
+}
+
+function handle_types_delete(string $id): void
+{
+    require_session();
+    if ($id === 'otro') {
+        fail('El tipo "Otro" no se puede eliminar.', 409);
+    }
+    db_transaction(function (array &$data) use ($id) {
+        if (!$data['types']) {
+            $data['types'] = DEFAULT_TYPES;
+        }
+        foreach ($data['assets'] as $a) {
+            if (($a['type'] ?? '') === $id) {
+                fail('Hay activos de ese tipo. Cámbiales el tipo antes de eliminarlo.', 409);
+            }
+        }
+        $before = count($data['types']);
+        $data['types'] = array_values(array_filter($data['types'], fn($t) => $t['id'] !== $id));
+        if (count($data['types']) === $before) {
+            fail('Tipo no encontrado.', 404);
+        }
+        if (!$data['types']) {
+            fail('Debe quedar al menos un tipo.', 409);
+        }
+    });
+    respond(['ok' => true]);
+}
+
+// ===========================================================================
 // Ajustes
 // ===========================================================================
 function handle_settings(): void
@@ -321,7 +455,7 @@ function handle_bootstrap(): void
         'employees'   => array_values($data['employees']),
         'assignments' => array_values($data['assignments']),
         'settings'    => $data['settings'],
-        'meta'        => ['types' => ASSET_TYPES, 'states' => ASSET_STATES, 'server_time' => db_now()],
+        'meta'        => ['types' => types_list($data), 'states' => ASSET_STATES, 'server_time' => db_now()],
     ]);
 }
 
@@ -330,12 +464,8 @@ function handle_bootstrap(): void
 // ===========================================================================
 function asset_payload(array $b): array
 {
-    $type = clean_str($b['type'] ?? '', 30);
-    if (!in_array($type, ASSET_TYPES, true)) {
-        $type = 'otro';
-    }
     return [
-        'type'          => $type,
+        'type'          => clean_str($b['type'] ?? '', 40),
         'brand'         => clean_str($b['brand'] ?? '', 80),
         'model'         => clean_str($b['model'] ?? '', 120),
         'serial'        => clean_str($b['serial'] ?? '', 120),
@@ -364,6 +494,9 @@ function handle_asset_create(): void
         $wantState = 'disponible';
     }
     $asset = db_transaction(function (array &$data) use ($p, $wantState) {
+        if (!in_array($p['type'], type_ids($data), true)) {
+            $p['type'] = 'otro';
+        }
         if ($p['serial'] !== '') {
             foreach ($data['assets'] as $a) {
                 if ($a['serial'] !== '' && strcasecmp($a['serial'], $p['serial']) === 0) {
@@ -416,7 +549,7 @@ function handle_asset_update(string $id): void
                 }
             }
         }
-        $a['type']          = $p['type'];
+        $a['type']          = in_array($p['type'], type_ids($data), true) ? $p['type'] : 'otro';
         $a['brand']         = $p['brand'];
         $a['model']         = $p['model'];
         $a['serial']        = $p['serial'];
@@ -679,12 +812,16 @@ function handle_export_csv(): void
         'disponible' => 'Disponible', 'asignado' => 'Asignado',
         'reparacion' => 'En reparacion', 'baja' => 'Dado de baja',
     ];
+    $typeLabels = [];
+    foreach (types_list($data) as $t) {
+        $typeLabels[$t['id']] = $t['label'];
+    }
     foreach ($data['assets'] as $a) {
         $emp = $a['assigned_to'] !== null ? ($empById[$a['assigned_to']] ?? null) : null;
         fputcsv($out, [
             $a['id'],
             $a['tag'] ?? '',
-            $a['type'],
+            $typeLabels[$a['type']] ?? $a['type'],
             $a['brand'],
             $a['model'],
             $a['serial'],

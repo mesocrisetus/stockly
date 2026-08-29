@@ -16,6 +16,7 @@
   }
   function safe(fn, name) { try { fn(); } catch (e) { console.warn("[" + name + "]", e); } }
 
+  // Tipos de fábrica (respaldo si el servidor no manda la lista).
   var TYPE_LABELS = {
     celular: "Celular", portatil: "Portátil", monitor: "Monitor", tablet: "Tablet",
     impresora: "Impresora", mobiliario: "Mobiliario", perifericos: "Periféricos", otro: "Otro"
@@ -23,6 +24,17 @@
   var STATE_LABELS = {
     disponible: "Disponible", asignado: "Asignado", reparacion: "En reparación", baja: "Dado de baja"
   };
+
+  // Lista vigente de tipos [{id,label}], la que manda el servidor.
+  function typeList() {
+    if (S && S.meta && S.meta.types && S.meta.types.length) return S.meta.types;
+    return Object.keys(TYPE_LABELS).map(function (k) { return { id: k, label: TYPE_LABELS[k] }; });
+  }
+  function typeLabel(id) {
+    var l = typeList();
+    for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i].label;
+    return TYPE_LABELS[id] || id;
+  }
 
   // ---- Llamadas al servidor --------------------------------
   function api(path, opts) {
@@ -130,7 +142,7 @@
   function empName(id) { var e = empById(id); return e ? e.name : "—"; }
   function assetTitle(a) {
     var t = [a.brand, a.model].filter(Boolean).join(" ");
-    return t || a.serial || (TYPE_LABELS[a.type] || a.type) + " " + a.id;
+    return t || a.serial || (typeLabel(a.type)) + " " + a.id;
   }
   function fmtDate(s) {
     if (!s) return "—";
@@ -244,6 +256,17 @@
       }).catch(function (err) { toast(err.message, "err"); });
     });
 
+    $("#type-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var inp = $("#type-new");
+      var v = inp.value.trim();
+      if (v.length < 2) { toast("Escribe un nombre de al menos 2 caracteres.", "err"); return; }
+      api("types", { method: "POST", body: { label: v } }).then(function () {
+        inp.value = ""; toast("Tipo añadido.", "ok");
+        return afterTypesChanged();
+      }).catch(function (err) { toast(err.message, "err"); });
+    });
+
     $("#password-form").addEventListener("submit", function (e) {
       e.preventDefault();
       var cur = $("#pw-current").value, nxt = $("#pw-next").value;
@@ -261,15 +284,24 @@
 
   // ---- Filtros --------------------------------------------
   function fillFilterOptions() {
-    var types = (S.meta.types || Object.keys(TYPE_LABELS));
     var ftype = $("#filter-type");
-    types.forEach(function (t) {
-      ftype.insertAdjacentHTML("beforeend", '<option value="' + escHTML(t) + '">' + escHTML(TYPE_LABELS[t] || t) + "</option>");
+    var ct = ftype.value;
+    ftype.innerHTML = '<option value="">Todos los tipos</option>';
+    typeList().forEach(function (t) {
+      ftype.insertAdjacentHTML("beforeend", '<option value="' + escHTML(t.id) + '">' + escHTML(t.label) + "</option>");
     });
+    ftype.value = ct;
+
     var fstate = $("#filter-state");
-    Object.keys(STATE_LABELS).forEach(function (k) {
-      fstate.insertAdjacentHTML("beforeend", '<option value="' + k + '">' + STATE_LABELS[k] + "</option>");
-    });
+    if (!fstate.getAttribute("data-filled")) {
+      var cs = fstate.value;
+      fstate.innerHTML = '<option value="">Todos los estados</option>';
+      Object.keys(STATE_LABELS).forEach(function (k) {
+        fstate.insertAdjacentHTML("beforeend", '<option value="' + k + '">' + STATE_LABELS[k] + "</option>");
+      });
+      fstate.value = cs;
+      fstate.setAttribute("data-filled", "1");
+    }
     refreshEmployeeFilter();
   }
   function refreshEmployeeFilter() {
@@ -340,7 +372,7 @@
     var bd = $("#type-breakdown");
     bd.innerHTML = keys.length ? keys.map(function (k) {
       var pct = Math.round((byType[k] / max) * 100);
-      return '<li class="bar-row"><span>' + escHTML(TYPE_LABELS[k] || k) + '</span>' +
+      return '<li class="bar-row"><span>' + escHTML(typeLabel(k)) + '</span>' +
         '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>' +
         '<span class="num">' + byType[k] + "</span></li>";
     }).join("") : '<li class="alert-empty">Sin activos todavía.</li>';
@@ -370,7 +402,7 @@
       if (f.emp === "__none__" && a.assigned_to) return false;
       if (f.emp && f.emp !== "__none__" && a.assigned_to !== f.emp) return false;
       if (f.q) {
-        var hay = [a.brand, a.model, a.serial, a.tag, a.notes, TYPE_LABELS[a.type],
+        var hay = [a.brand, a.model, a.serial, a.tag, a.notes, typeLabel(a.type),
           a.assigned_to ? empName(a.assigned_to) : ""].join(" ").toLowerCase();
         if (hay.indexOf(f.q) === -1) return false;
       }
@@ -381,7 +413,7 @@
     tb.innerHTML = rows.map(function (a) {
       return "<tr data-id='" + a.id + "'>" +
         "<td class='cell-mute'>" + (escHTML(a.tag) || a.id) + "</td>" +
-        "<td><span class='type-chip'>" + escHTML(TYPE_LABELS[a.type] || a.type) + "</span></td>" +
+        "<td><span class='type-chip'>" + escHTML(typeLabel(a.type)) + "</span></td>" +
         "<td class='cell-strong'>" + (escHTML([a.brand, a.model].filter(Boolean).join(" ")) || "<span class='cell-mute'>—</span>") + "</td>" +
         "<td>" + (escHTML(a.serial) || "<span class='cell-mute'>—</span>") + "</td>" +
         "<td><span class='badge " + a.status + "'>" + STATE_LABELS[a.status] + "</span></td>" +
@@ -424,6 +456,7 @@
   // ---- Ajustes -----------------------------------------
   function renderAjustes() {
     $("#stale-days").value = S.settings.stale_days || 30;
+    renderTypeList();
     api("admins").then(function (d) {
       var list = $("#admin-list");
       list.innerHTML = (d.admins || []).map(function (u) {
@@ -444,6 +477,71 @@
     }).catch(function () {});
   }
 
+  // ---- Ajustes: tipos de activo -----------------------
+  function countAssetsOfType(id) {
+    var n = 0;
+    for (var i = 0; i < S.assets.length; i++) if (S.assets[i].type === id) n++;
+    return n;
+  }
+  function afterTypesChanged() {
+    // Refresca meta.types desde el servidor y repinta todo lo que muestra tipos.
+    return api("bootstrap").then(function (d) {
+      if (d.meta) S.meta = d.meta;
+      if (d.assets) S.assets = d.assets;
+      fillFilterOptions();
+      renderAssets();
+      renderPanel();
+      renderTypeList();
+    });
+  }
+  function renderTypeList() {
+    var list = $("#type-list");
+    if (!list) return;
+    list.innerHTML = typeList().map(function (t) {
+      var used = countAssetsOfType(t.id);
+      var canDelete = t.id !== "otro" && used === 0;
+      return '<li class="admin-row" data-type="' + escHTML(t.id) + '">' +
+        '<span><strong class="type-name">' + escHTML(t.label) + "</strong>" +
+        (used ? ' <span class="you">· ' + used + (used === 1 ? " activo" : " activos") + "</span>" : "") + "</span>" +
+        '<span class="row-actions">' +
+          '<button class="btn btn-ghost btn-sm" data-type-rename="' + escHTML(t.id) + '">Renombrar</button>' +
+          (canDelete
+            ? '<button class="btn btn-ghost btn-sm" data-type-del="' + escHTML(t.id) + '">Eliminar</button>'
+            : "") +
+        "</span></li>";
+    }).join("");
+
+    $$("#type-list [data-type-rename]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-type-rename");
+        var cur = typeLabel(id);
+        openRenameTypeModal(id, cur);
+      });
+    });
+    $$("#type-list [data-type-del]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-type-del");
+        if (!confirm('¿Eliminar el tipo "' + typeLabel(id) + '"?')) return;
+        api("types/" + encodeURIComponent(id), { method: "DELETE" }).then(function () {
+          toast("Tipo eliminado.", "ok");
+          return afterTypesChanged();
+        }).catch(function (err) { toast(err.message, "err"); });
+      });
+    });
+  }
+  function openRenameTypeModal(id, cur) {
+    openModal("Renombrar tipo",
+      field("Nombre del tipo", "typelabel", 'maxlength="40"', cur),
+      function () {
+        var v = mval("typelabel");
+        if (v.length < 2) { toast("El nombre debe tener al menos 2 caracteres.", "err"); return; }
+        api("types/" + encodeURIComponent(id), { method: "PUT", body: { label: v } }).then(function () {
+          closeModal(); toast("Tipo renombrado.", "ok");
+          return afterTypesChanged();
+        }).catch(function (err) { toast(err.message, "err"); });
+      }, "Guardar");
+  }
+
   // ---- Drawer: detalle de activo ----------------------
   function openAssetDetail(id) {
     var a = assetById(id);
@@ -455,7 +553,7 @@
 
     var rows = [
       dRow("Código", a.tag || "—"),
-      dRow("Tipo", TYPE_LABELS[a.type] || a.type),
+      dRow("Tipo", typeLabel(a.type)),
       dRow("Marca", a.brand || "—"),
       dRow("Modelo", a.model || "—"),
       dRow("Nº de serie", a.serial || "—"),
@@ -551,7 +649,7 @@
 
     var curHTML = current.length ? "<ul class='timeline'>" + current.map(function (a) {
       return "<li class='tl-open'><div class='tl-line'><span><strong>" + escHTML(assetTitle(a)) + "</strong> · " +
-        (TYPE_LABELS[a.type] || a.type) + " — desde " + fmtDate(a.assigned_since) + "</span>" +
+        (typeLabel(a.type)) + " — desde " + fmtDate(a.assigned_since) + "</span>" +
         "<button type='button' class='btn btn-ghost btn-sm tl-btn' data-unassign='" + a.id + "'>Quitar</button></div></li>";
     }).join("") + "</ul>" : "<p class='muted small'>Sin activos asignados ahora mismo.</p>";
 
@@ -635,11 +733,12 @@
 
   function openAssetModal(a) {
     var isEdit = !!a;
-    var typeOpts = (S.meta.types || Object.keys(TYPE_LABELS)).map(function (t) { return { v: t, t: TYPE_LABELS[t] || t }; });
+    var typeOpts = typeList().map(function (t) { return { v: t.id, t: t.label }; });
+    var defType = a ? a.type : (typeOpts[0] ? typeOpts[0].v : "otro");
     var stateOpts = [{ v: "disponible", t: "Disponible" }, { v: "reparacion", t: "En reparación" }];
     var body =
       '<div class="field-row">' +
-        selectField("Tipo", "type", typeOpts, a ? a.type : "portatil") +
+        selectField("Tipo", "type", typeOpts, defType) +
         field("Código interno (opcional)", "tag", "", a ? a.tag : "") +
       "</div>" +
       '<div class="field-row">' +
