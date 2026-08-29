@@ -1,0 +1,51 @@
+========================================================================
+  Stockly — instalación en un servidor Ubuntu
+========================================================================
+
+Necesitas:  un servidor con Ubuntu 22.04 o 24.04 y acceso a internet
+            (para descargar Apache y PHP).
+
+------------------------------------------------------------------------
+  PASOS  (3 líneas)
+------------------------------------------------------------------------
+
+  1)  Copia este zip al servidor y descomprímelo:
+
+          unzip stockly_ubuntu.zip
+          cd stockly_ubuntu
+
+  2)  Ejecuta el instalador:
+
+          sudo ./autoinstall.sh
+
+  3)  Cuando termine, te dirá una dirección tipo  http://192.168.x.x/
+      Ábrela en el navegador de cualquier ordenador de la red.
+
+      El usuario es  admin  y la contraseña te la muestra el propio
+      instalador al acabar (y queda guardada en
+      /var/www/stockly/data_store/CONTRASENA_INICIAL_ADMIN.txt).
+      Cámbiala desde la app y borra ese fichero.
+
+------------------------------------------------------------------------
+  Qué hace el instalador
+------------------------------------------------------------------------
+  - Instala Apache y PHP con lo justo que necesita la aplicación.
+  - Copia la web a  /var/www/stockly/public_html
+  - Crea  /var/www/stockly/data_store  (la base de datos; queda FUERA
+    de la web y nunca se borra).
+  - Configura el sitio de Apache y lo arranca.
+  - Abre el puerto web en el cortafuegos si está activo.
+
+  Instalar en otra carpeta:   sudo ./autoinstall.sh /opt/stockly
+  Actualizar (sin perder datos): vuelve a ejecutar  sudo ./autoinstall.sh
+  Desinstalar:                  sudo ./desinstalar.sh
+
+------------------------------------------------------------------------
+  Copia de seguridad
+------------------------------------------------------------------------
+  Todo el inventario y las cuentas están en un único fichero:
+      /var/www/stockly/data_store/db.json
+  Cópialo periódicamente. Restaurar = volver a dejarlo ahí.
+
+  Guía detallada (Apache y Nginx, HTTPS, cron de copias):  DESPLIEGUE-UBUNTU.md
+========================================================================

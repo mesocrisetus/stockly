@@ -68,9 +68,15 @@ se borraría en cada actualización. Al estar fuera, **se conserva siempre**.
 
 ## 4. Ponerlo en un servidor
 
-- **Servidor Ubuntu propio (red interna):** guía paso a paso en
+- **Servidor Ubuntu propio (red interna) — lo más fácil:** descarga
+  `stockly_ubuntu.zip` de la sección **[Releases](../../releases)**, descomprímelo
+  en el servidor y ejecuta `sudo ./autoinstall.sh`. Instala y arranca todo solo.
+  Detalles y método manual (o con Nginx) en
   [`DESPLIEGUE-UBUNTU.md`](DESPLIEGUE-UBUNTU.md).
 - **Hostinger:** ver abajo.
+
+> Para regenerar el zip tú mismo: `python packaging/construir-zip.py`
+> (queda en `dist/stockly_ubuntu.zip`).
 
 ### 4b. Publicarlo en Hostinger  (cuando quieras)
 

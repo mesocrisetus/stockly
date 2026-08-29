@@ -22,3 +22,6 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# Artefactos de compilación (el zip se publica como Release, no en el repo)
+/dist/
