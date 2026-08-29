@@ -18,9 +18,15 @@ hacer `sudo`.
 En la sección **Releases** del repositorio hay un fichero **`stockly_ubuntu.zip`**
 con la aplicación y un instalador que lo monta todo solo.
 
+> El repositorio es **privado**, así que la URL de descarga del zip pide
+> autenticación. Lo más cómodo: descarga `stockly_ubuntu.zip` desde la web de
+> GitHub en tu PC (sesión iniciada) y pásalo al servidor con `scp`:
+> `scp stockly_ubuntu.zip usuario@IP-DEL-SERVIDOR:~/`
+> (Alternativas: `gh release download v1.0.0 -R mesocrisetus/stockly` tras
+> `gh auth login`, o hacer el repo público.)
+
 ```bash
-# en el servidor Ubuntu
-wget <URL-del-zip-de-la-Release> -O stockly_ubuntu.zip
+# ya en el servidor Ubuntu, con el zip en el directorio actual
 sudo apt-get install -y unzip
 unzip stockly_ubuntu.zip
 cd stockly_ubuntu
