@@ -35,9 +35,16 @@ sudo ./autoinstall.sh
 
 El instalador: instala Apache y PHP, copia la web a `/var/www/stockly/public_html`,
 crea `data_store/` fuera de la web, configura el sitio de Apache, abre el puerto
-y te muestra la dirección y la contraseña inicial. Volver a ejecutarlo
-**actualiza** la web **sin borrar los datos**. Para instalar en otra carpeta:
-`sudo ./autoinstall.sh /opt/stockly`. Para quitarlo: `sudo ./desinstalar.sh`.
+y te muestra la dirección exacta y la contraseña inicial.
+
+**Puerto:** en un servidor limpio usa el **80** (`http://IP/`). Si el servidor
+**ya aloja otras webs** o su **puerto 80 redirige a https**, Stockly se instala
+en el **8080** automáticamente (`http://IP:8080/`) sin tocar el resto. Fuerza uno
+con `sudo STOCKLY_PORT=9000 ./autoinstall.sh`. **Entra siempre por `http://`,
+no `https://`.**
+
+Volver a ejecutarlo **actualiza** la web **sin borrar los datos**. Otra carpeta:
+`sudo ./autoinstall.sh /opt/stockly`. Quitarlo: `sudo ./desinstalar.sh`.
 
 El resto de esta guía es el mismo proceso **paso a paso a mano**, por si
 prefieres controlarlo tú o usar Nginx.

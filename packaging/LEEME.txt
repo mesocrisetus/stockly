@@ -18,8 +18,14 @@ Necesitas:  un servidor con Ubuntu 22.04 o 24.04 y acceso a internet
 
           sudo ./autoinstall.sh
 
-  3)  Cuando termine, te dirá una dirección tipo  http://192.168.x.x/
+  3)  Cuando termine, te dirá la dirección exacta, p.ej.  http://192.168.x.x/
+      ó  http://192.168.x.x:8080/  (usa SIEMPRE http://, no https://).
       Ábrela en el navegador de cualquier ordenador de la red.
+
+      Nota: si el servidor ya aloja otras webs o su puerto 80 redirige a
+      https, el instalador pone Stockly en el puerto 8080 automáticamente y
+      no toca nada de lo demás. Para forzar un puerto:
+          sudo STOCKLY_PORT=9000 ./autoinstall.sh
 
       El usuario es  admin  y la contraseña te la muestra el propio
       instalador al acabar (y queda guardada en

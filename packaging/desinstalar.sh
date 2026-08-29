@@ -28,9 +28,11 @@ fi
 # 2. Quitar el sitio de Apache
 a2dissite stockly.conf >/dev/null 2>&1 || true
 rm -f "$SITE_CONF"
+a2disconf stockly-port >/dev/null 2>&1 || true
+rm -f /etc/apache2/conf-available/stockly-port.conf
 a2ensite 000-default.conf >/dev/null 2>&1 || true
-systemctl reload apache2 2>/dev/null || true
-echo "  Sitio de Apache eliminado."
+systemctl reload apache2 2>/dev/null || service apache2 reload 2>/dev/null || true
+echo "  Sitio de Apache y su puerto propio eliminados."
 
 # 3. ¿Borrar también los ficheros?
 read -r -p "¿Borrar la carpeta $APP_DIR y todos los datos? (escribe 'si' para confirmar): " ANS
